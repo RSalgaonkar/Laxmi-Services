@@ -1,121 +1,115 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect, useMemo, useState } from 'react';
+import { BookingForm } from './components/BookingForm';
+import { Header } from './components/Header';
+import { Hero } from './components/Hero';
+import { Testimonials } from './components/Testimonials';
+import { vehicles, stats } from './data/mockData';
+import { Dashboard } from './pages/Dashboard';
+import type { BookingForm as BookingFormType, ServiceType } from './types';
+
+const defaultVehicleId = vehicles[0]?.id ?? 0;
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [activeService, setActiveService] = useState<ServiceType>('car-rental');
+  const [notice, setNotice] = useState('Pick a ride to see pricing and instant availability.');
+  const [form, setForm] = useState<BookingFormType>({
+    serviceType: 'car-rental',
+    pickup: 'Siolim',
+    dropoff: 'Airport',
+    startDate: '2026-04-04',
+    endDate: '2026-04-06',
+    passengers: 2,
+    vehicleId: defaultVehicleId,
+  });
+
+  useEffect(() => {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setTheme(prefersDark ? 'dark' : 'light');
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  // const selectedVehicle = useMemo(
+  //   () => vehicles.find((vehicle) => vehicle.id === form.vehicleId),
+  //   [form.vehicleId]
+  // );
+
+  const handleServiceChange = (service: ServiceType) => {
+    setActiveService(service);
+    const firstVehicle = vehicles.find((vehicle) => vehicle.type === service);
+    setForm((current) => ({
+      ...current,
+      serviceType: service,
+      vehicleId: firstVehicle?.id ?? 0,
+    }));
+  };
+
+  const handleSelectVehicle = (id: number) => {
+    const match = vehicles.find((vehicle) => vehicle.id === id);
+    if (!match) return;
+
+    setActiveService(match.type);
+    setForm((current) => ({
+      ...current,
+      serviceType: match.type,
+      vehicleId: id,
+    }));
+
+    setNotice(
+      `${match.name} selected. ${
+        match.pricePerDay
+          ? `Estimated from ₹${match.pricePerDay}/day.`
+          : `Estimated from ₹${match.baseFare} + ₹${match.pricePerKm}/km.`
+      }`
+    );
+  };
+
+  // const handleBooking = () => {
+  //   if (!selectedVehicle) return;
+
+  //   const estimate = selectedVehicle.pricePerDay
+  //     ? `${selectedVehicle.name} is available from ₹${selectedVehicle.pricePerDay}/day for ${form.passengers} passenger(s).`
+  //     : `${selectedVehicle.name} is available from ₹${selectedVehicle.baseFare} base fare plus ₹${selectedVehicle.pricePerKm}/km.`;
+
+  //   setNotice(`${estimate} Pickup: ${form.pickup}, Dropoff: ${form.dropoff}.`);
+  // };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app-shell">
+      <Header
+        theme={theme}
+        onToggleTheme={() =>
+          setTheme((current) => (current === 'light' ? 'dark' : 'light'))
+        }
+        activeService={activeService}
+        onServiceChange={handleServiceChange}
+      />
 
-      <div className="ticks"></div>
+      <main className="main-layout">
+        <Hero stats={stats} activeService={activeService} />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        {/* <BookingForm
+          form={form}
+          setForm={setForm}
+          vehicles={vehicles}
+          onSubmit={handleBooking}
+        /> */}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        {/* <div className="notice-banner">{notice}</div> */}
+
+        <Dashboard
+          vehicles={vehicles}
+          serviceType={activeService}
+          onSelectVehicle={handleSelectVehicle}
+        />
+
+        <Testimonials />
+      </main>
+    </div>
+  );
 }
 
-export default App
+export default App;
